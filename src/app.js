@@ -5,7 +5,8 @@
 import { createGameState } from './game/state.js';
 import { setupKeyboard } from './game/controls.js';
 import { createHomeScreen } from './screens/home.js';
-import { createRandomScreen } from './screens/random.js';
+import { createDifficultyScreen } from './screens/difficulty.js';
+import { LEVELS } from './game/levels.js';
 import { createGameScreen } from './screens/game.js';
 import { createCompletionScreen } from './screens/completion.js';
 import { showSettings } from './ui/settings.js';
@@ -95,8 +96,8 @@ export function createApp() {
       case 'home':
         showHome();
         break;
-      case 'random':
-        showRandom();
+      case 'difficulty':
+        showDifficulty();
         break;
       case 'game':
         showGame();
@@ -118,24 +119,35 @@ export function createApp() {
 
   function showHome() {
     currentScreen = createHomeScreen(containerEl, {
-      onRandom: () => navigateTo('random'),
+      onPlay: () => navigateTo('difficulty'),
       onHowToPlay: () => showHowToPlay(),
     });
   }
 
-  function showRandom() {
-    currentScreen = createRandomScreen(containerEl, gameState, {
-      onHowToPlay: () => showHowToPlay(),
+  function showDifficulty() {
+    currentScreen = createDifficultyScreen(containerEl, {
       onBack: () => navigateTo('home'),
-      onStart: (puzzle, solution, difficulty) => {
-        gameState.startGame({
-          puzzle,
-          solution,
-          mode: 'random',
-          difficulty,
-        });
-        clearScreen();
-        showGame();
+      onSelect: (difficulty) => {
+        const state = gameState.getState();
+        const levelNum = state.levelsProgress[difficulty] || 1;
+        
+        // Find puzzle data
+        const levelData = LEVELS[difficulty].find(l => l.id === levelNum);
+        
+        if (levelData) {
+          gameState.startGame({
+            puzzle: levelData.puzzle,
+            solution: levelData.solution,
+            difficulty: difficulty,
+            level: levelNum
+          });
+          clearScreen();
+          showGame();
+        } else {
+          // If they beat all 20, reset them or show congrats
+          alert(`You beat all 20 levels of ${difficulty.toUpperCase()}!`);
+          navigateTo('difficulty');
+        }
       },
     });
   }
@@ -157,7 +169,17 @@ export function createApp() {
           },
         });
       },
-      onRetry: () => navigateTo('random'),
+      onRetry: () => {
+        const state = gameState.getState();
+        const levelData = LEVELS[state.difficulty].find(l => l.id === state.currentLevel);
+        gameState.startGame({
+          puzzle: levelData.puzzle,
+          solution: levelData.solution,
+          difficulty: state.difficulty,
+          level: state.currentLevel
+        });
+        renderCurrentScreen();
+      },
       onHome: () => navigateTo('home'),
     });
     currentScreen = gameScreen;
@@ -176,7 +198,33 @@ export function createApp() {
   function handleCompletion() {
     updateStatistics(gameState);
     updateStreak(gameState);
-    gameState.update({ stars: gameState.getState().stars + 1 });
+    
+    // Auto advance level
+    const state = gameState.getState();
+    let nextLevelNum = state.currentLevel + 1;
+    
+    if (nextLevelNum > 20) {
+      // Completed the mode
+      gameState.update({ stars: state.stars + 5 });
+      saveGame(gameState);
+      
+      setTimeout(() => {
+        clearScreen();
+        alert(`CONGRATULATIONS! You completed all ${state.difficulty.toUpperCase()} levels!`);
+        navigateTo('difficulty');
+      }, 800);
+      return;
+    }
+    
+    // Update progress
+    gameState.update({ 
+      stars: state.stars + 1,
+      levelsProgress: {
+        ...state.levelsProgress,
+        [state.difficulty]: Math.max(state.levelsProgress[state.difficulty], nextLevelNum)
+      }
+    });
+    
     saveGame(gameState);
 
     setTimeout(() => {

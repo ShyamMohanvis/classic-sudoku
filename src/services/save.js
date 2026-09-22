@@ -15,14 +15,15 @@ export function saveGame(gameState) {
       stars: state.stars,
       statistics: { ...state.statistics },
       streak: { ...state.streak },
+      levelsProgress: { ...state.levelsProgress },
       randomProgress: null,
     };
 
     // Save current game progress
     if (state.screen === 'game' && state.puzzle && !state.completed) {
       const progress = {
-        mode: state.mode,
         difficulty: state.difficulty,
+        currentLevel: state.currentLevel,
         puzzle: state.puzzle,
         solution: state.solution,
         values: state.values,
@@ -62,6 +63,7 @@ export function loadGameState(gameState) {
   if (data.settings) Object.assign(state.settings, data.settings);
   if (data.statistics) Object.assign(state.statistics, data.statistics);
   if (data.streak) Object.assign(state.streak, data.streak);
+  if (data.levelsProgress) Object.assign(state.levelsProgress, data.levelsProgress);
   if (typeof data.stars === 'number') state.stars = data.stars;
 
   gameState.emit();

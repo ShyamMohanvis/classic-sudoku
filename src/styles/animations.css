@@ -49,9 +49,9 @@
 
 /* --- Hint pulse --- */
 @keyframes hintPulse {
-  0% { box-shadow: inset 0 0 0 2px var(--orange); }
-  50% { box-shadow: inset 0 0 0 3px var(--orange), 0 0 12px rgba(255, 107, 26, 0.3); }
-  100% { box-shadow: inset 0 0 0 2px var(--orange); }
+  0% { box-shadow: inset 0 0 0 2px var(--cyan); }
+  50% { box-shadow: inset 0 0 0 3px var(--cyan), var(--shadow-glow-cyan); }
+  100% { box-shadow: inset 0 0 0 2px var(--cyan); }
 }
 
 .hint-pulse {
@@ -60,7 +60,7 @@
 
 /* --- Cell selection fade --- */
 @keyframes cellSelect {
-  from { background: rgba(255, 107, 26, 0.3); }
+  from { background: rgba(0, 255, 255, 0.3); }
   to { background: var(--grid-selected); }
 }
 
@@ -78,7 +78,7 @@
 /* --- Completion pulse --- */
 @keyframes completionPulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.02); box-shadow: 0 0 40px rgba(68, 204, 102, 0.3); }
+  50% { transform: scale(1.02); box-shadow: 0 0 40px var(--cyan-glow); }
   100% { transform: scale(1); }
 }
 
@@ -141,7 +141,7 @@
 
 /* --- Error flash --- */
 @keyframes errorFlash {
-  0% { background: rgba(255, 50, 50, 0.35); }
+  0% { background: rgba(255, 0, 60, 0.4); }
   100% { background: var(--grid-error); }
 }
 
@@ -187,8 +187,8 @@
 
 /* --- Glow ring (loading) --- */
 @keyframes glowRing {
-  0% { box-shadow: 0 0 0 0 rgba(255, 107, 26, 0.5); }
-  100% { box-shadow: 0 0 0 20px rgba(255, 107, 26, 0); }
+  0% { box-shadow: 0 0 0 0 var(--cyan-glow); }
+  100% { box-shadow: 0 0 0 20px rgba(0, 255, 255, 0); }
 }
 
 /* --- Game over fade --- */

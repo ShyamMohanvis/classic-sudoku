@@ -26,7 +26,7 @@ export function createCompletionScreen(container, gameState, callbacks) {
   // Title
   const title = document.createElement('div');
   title.className = 'completion-title fade-in-up';
-  title.textContent = 'SOLVED!';
+  title.textContent = 'SUDOKU SOLVED!';
   completion.appendChild(title);
 
   // Time
@@ -65,16 +65,13 @@ export function createCompletionScreen(container, gameState, callbacks) {
 
   completion.appendChild(stats);
 
-  // Continue button
-  const continueBtn = document.createElement('button');
-  continueBtn.className = 'continue-btn fade-in-up';
-  continueBtn.style.animationDelay = '0.45s';
-  continueBtn.textContent = 'Continue';
-  continueBtn.addEventListener('click', () => callbacks.onContinue?.());
-  completion.appendChild(continueBtn);
-
   screen.appendChild(completion);
   container.appendChild(screen);
+
+  // Auto advance
+  setTimeout(() => {
+    callbacks.onContinue?.();
+  }, 2500);
 
   return { element: screen };
 }
@@ -88,7 +85,7 @@ function spawnConfetti() {
 
   const ctx = canvas.getContext('2d');
   const particles = [];
-  const colors = ['#ff6b1a', '#ff8c42', '#ffaa33', '#e04090', '#c4196e', '#66cc66', '#4488ff', '#ffffff'];
+  const colors = ['#00ffff', '#4488ff', '#98005d', '#c4196e', '#ff00ff', '#ffffff'];
 
   for (let i = 0; i < 80; i++) {
     particles.push({

@@ -27,6 +27,16 @@ export function createNumberPad(container, gameState, onNumber) {
     buttons.push(btn);
   }
 
+  // Add Erase Button
+  const eraseBtn = document.createElement('button');
+  eraseBtn.className = 'num-btn erase-btn';
+  eraseBtn.textContent = '⌫';
+  eraseBtn.setAttribute('aria-label', 'Erase cell');
+  eraseBtn.addEventListener('click', () => {
+    onNumber('erase'); // Pass 'erase' to be handled
+  });
+  pad.appendChild(eraseBtn);
+
   container.appendChild(pad);
 
   function render() {
@@ -44,12 +54,7 @@ export function createNumberPad(container, gameState, onNumber) {
       }
     }
 
-    // Get impossible numbers for selected cell
-    let impossibleNums = new Set();
-    if (selectedCell && settings.hideImpossible) {
-      const related = getRelatedValues(values, selectedCell.row, selectedCell.col);
-      impossibleNums = related;
-    }
+
 
     for (let i = 0; i < 9; i++) {
       const n = i + 1;
@@ -59,10 +64,6 @@ export function createNumberPad(container, gameState, onNumber) {
       // Mark completed numbers (all 9 placed)
       if (numCounts[n] >= 9) {
         btn.classList.add('completed');
-      }
-
-      // Mark impossible numbers
-      if (selectedCell && settings.hideImpossible && impossibleNums.has(n) && values[selectedCell.row][selectedCell.col] === 0) {
         btn.classList.add('disabled');
       }
     }

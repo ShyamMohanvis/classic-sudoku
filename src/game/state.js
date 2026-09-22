@@ -10,9 +10,10 @@ export function createGameState() {
     // Current screen
     screen: 'home', // 'home' | 'random' | 'calendar' | 'game' | 'completion'
 
-    // Game mode
-    mode: null, // 'daily' | 'random'
+    // Game level/difficulty
     difficulty: 'medium',
+    currentLevel: 1,
+    levelsProgress: { easy: 1, medium: 1, hard: 1 },
 
     // Puzzle data
     puzzle: null,       // original puzzle (givens)
@@ -93,20 +94,21 @@ export function createGameState() {
   /**
    * Initialize a new game.
    */
-  function startGame({ puzzle, solution, mode, difficulty }) {
+  function startGame({ puzzle, solution, difficulty, level }) {
     const values = puzzle.map(r => [...r]);
     const notes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
 
     Object.assign(state, {
       screen: 'game',
-      mode,
       difficulty,
+      currentLevel: level,
       puzzle,
       solution,
       values,
       notes,
       selectedCell: null,
-      lives: state.maxLives,
+      lives: 3, // Exactly 3 lives
+      maxLives: 3,
       hintsUsed: 0,
       mistakes: 0,
       elapsedSeconds: 0,
@@ -122,8 +124,27 @@ export function createGameState() {
   }
 
   /**
+   * Restart the current puzzle.
+   */
+  function restartGame() {
+    const { puzzle } = state;
+    if (!puzzle) return;
+
+    state.values = puzzle.map(r => [...r]);
+    state.notes = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => new Set()));
+    state.selectedCell = null;
+    state.lives = 3;
+    state.elapsedSeconds = 0;
+    state.completed = false;
+    state.gameOver = false;
+    state.timerRunning = true;
+    state.undoStack = [];
+    emit();
+  }
+
+  /**
    * Place a number in the selected cell.
-   * Returns 'correct', 'wrong', or 'notes'.
+   * Returns 'correct', 'invalid', or 'notes'.
    */
   function placeNumber(num) {
     const { selectedCell, puzzle, solution, values, notes, isNotesMode, lives } = state;
@@ -131,8 +152,9 @@ export function createGameState() {
 
     const { row, col } = selectedCell;
 
-    // Can't modify given cells
+    // Can't modify given cells or correctly filled cells
     if (puzzle[row][col] !== 0) return null;
+    if (values[row][col] !== 0) return null;
 
     if (isNotesMode) {
       // Toggle note
@@ -142,25 +164,19 @@ export function createGameState() {
       } else {
         cellNotes.add(num);
       }
-      // Save undo
       state.undoStack.push({ type: 'note', row, col, num });
       emit();
       return 'notes';
     }
 
-    // Save undo
-    const oldVal = values[row][col];
-    state.undoStack.push({ type: 'value', row, col, oldVal });
-
     if (solution[row][col] === num) {
       // Correct
+      // Save undo for potential future changes, though correct values shouldn't be cleared.
+      state.undoStack.push({ type: 'value', row, col, oldVal: 0 });
       values[row][col] = num;
-      // Clear notes for this cell
       notes[row][col].clear();
-      // Remove this number from notes in related cells
       removeNoteFromRelated(row, col, num);
 
-      // Check completion
       if (checkCompletion()) {
         state.completed = true;
         state.timerRunning = false;
@@ -170,19 +186,17 @@ export function createGameState() {
       emit();
       return 'correct';
     } else {
-      // Wrong
+      // Invalid Move: Does not match solution
       state.mistakes++;
       state.lives = Math.max(0, lives - 1);
 
       if (state.lives <= 0) {
         state.gameOver = true;
         state.timerRunning = false;
-        state.streak.current = 0;
-        state.statistics.currentStreak = 0;
       }
 
       emit();
-      return 'wrong';
+      return 'invalid';
     }
   }
 
@@ -339,6 +353,7 @@ export function createGameState() {
     update,
     subscribe,
     startGame,
+    restartGame,
     placeNumber,
     useHint,
     undo,

@@ -12,18 +12,41 @@ export function createHeader(container, gameState, callbacks) {
   const right = document.createElement('div');
   right.className = 'header-right';
 
-  // Hearts
-  const heartsEl = document.createElement('div');
-  heartsEl.className = 'header-badge hearts';
-  heartsEl.innerHTML = '<span class="heart-icon">♥</span> <span class="lives-count">5</span>';
-  left.appendChild(heartsEl);
+  const center = document.createElement('div');
+  center.className = 'header-center';
 
+  // Back Button
+  const backBtn = document.createElement('button');
+  backBtn.className = 'header-back-btn';
+  backBtn.innerHTML = '←';
+  backBtn.style.fontSize = '24px';
+  backBtn.style.fontWeight = 'bold';
+  backBtn.style.padding = '8px';
+  backBtn.setAttribute('aria-label', 'Back');
+  backBtn.addEventListener('click', () => callbacks.onBack?.());
+  left.appendChild(backBtn);
 
-  // Stars
-  const starsEl = document.createElement('div');
-  starsEl.className = 'header-badge stars';
-  starsEl.innerHTML = '<span class="star-icon">★</span> <span class="stars-count">1</span>';
-  right.appendChild(starsEl);
+  const diffTitle = document.createElement('div');
+  diffTitle.className = 'header-diff-title';
+  diffTitle.style.fontSize = '18px';
+  diffTitle.style.fontWeight = '800';
+  diffTitle.style.letterSpacing = '2px';
+  diffTitle.style.textTransform = 'uppercase';
+
+  const timerDisplay = document.createElement('div');
+  timerDisplay.className = 'header-timer';
+  timerDisplay.style.fontSize = '14px';
+  timerDisplay.style.fontWeight = '700';
+  timerDisplay.style.color = 'var(--white-dim)';
+  timerDisplay.style.marginTop = '2px';
+
+  const centerWrapper = document.createElement('div');
+  centerWrapper.style.display = 'flex';
+  centerWrapper.style.flexDirection = 'column';
+  centerWrapper.style.alignItems = 'center';
+  centerWrapper.appendChild(diffTitle);
+  centerWrapper.appendChild(timerDisplay);
+  center.appendChild(centerWrapper);
 
   // Settings
   const settingsBtn = document.createElement('button');
@@ -34,29 +57,30 @@ export function createHeader(container, gameState, callbacks) {
   right.appendChild(settingsBtn);
 
   header.appendChild(left);
+  header.appendChild(center);
   header.appendChild(right);
   container.appendChild(header);
 
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
   function render() {
     const state = gameState.getState();
-    const livesCount = heartsEl.querySelector('.lives-count');
-    const starsCount = starsEl.querySelector('.stars-count');
-    livesCount.textContent = state.lives;
-    starsCount.textContent = state.stars;
+    const diffText = state.difficulty ? state.difficulty.toUpperCase() : '';
+    
+    diffTitle.textContent = diffText;
 
-    // Show/hide hearts based on screen
-    if (state.screen === 'game') {
-      heartsEl.style.display = 'flex';
-    } else {
-      heartsEl.style.display = 'none';
-    }
+    // Update color based on difficulty
+    diffTitle.style.color = state.difficulty === 'easy' ? 'var(--cyan)' :
+                            state.difficulty === 'medium' ? 'var(--purple)' :
+                            state.difficulty === 'hard' ? 'var(--magenta)' : 'var(--cyan)';
+    diffTitle.style.textShadow = `0 0 10px ${diffTitle.style.color}`;
+
+    timerDisplay.textContent = formatTime(state.elapsedSeconds);
   }
 
-  function animateHeartLoss() {
-    const heartIcon = heartsEl.querySelector('.heart-icon');
-    heartIcon.classList.add('heart-bounce');
-    setTimeout(() => heartIcon.classList.remove('heart-bounce'), 500);
-  }
-
-  return { render, animateHeartLoss, element: header };
+  return { render, element: header };
 }

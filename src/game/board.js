@@ -74,24 +74,6 @@ export function createBoard(container, gameState) {
 
           if (r === sr && c === sc) {
             cell.classList.add('selected');
-          } else {
-            // Same row, column, or 3x3 box
-            const sameRow = r === sr;
-            const sameCol = c === sc;
-            const sameBox = (
-              Math.floor(r / 3) === Math.floor(sr / 3) &&
-              Math.floor(c / 3) === Math.floor(sc / 3)
-            );
-
-            if (sameRow || sameCol || sameBox) {
-              cell.classList.add('related');
-            }
-
-            // Same number highlighting
-            const selectedVal = values[sr][sc];
-            if (selectedVal !== 0 && val === selectedVal) {
-              cell.classList.add('same-number');
-            }
           }
         }
 
